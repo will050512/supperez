@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .calendar-container {
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .user-message {
+            background: #e3f2fd;
+            margin-left: auto;
+            border-top-right-radius: 5px;
+        }
+
+        .ai-message {
+            background: #f5f5f5;
+            margin-right: auto;
+            border-top-left-radius: 5px;
+        }
+
+        .calendar {
+            width: 100%;
+        }
+
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-day:hover {
+            background: #e3f2fd;
+        }
+
+        .calendar-day.booked {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .calendar-day.selected {
+            background: #2196f3;
+            color: white;
+        }
+
+        .time-slots {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .time-slot {
+            padding: 8px;
+            text-align: center;
+            background: #f5f5f5;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-slot:hover {
+            background: #e3f2fd;
+        }
+
+        .time-slot.booked {
+            background: #ffcdd2;
+            color: #c62828;
+            cursor: not-allowed;
+        }
+
+        .demo-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .demo-button:hover {
+            background: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">您好！我是AI客服助理，很高興為您服務。請問您想預約什麼時段的診療呢？</div>
+            </div>
+        </div>
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <h3>2024年10月</h3>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+            </div>
+            <div class="time-slots" id="timeSlots">
+            </div>
+            <button class="demo-button" onclick="startDemo()">開始展示預約流程</button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化日曆
+        function initCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            // 添加星期標題
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            weekdays.forEach(day => {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.textContent = day;
+                grid.appendChild(dayEl);
+            });
+            
+            // 添加日期
+            for (let i = 1; i <= 31; i++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.textContent = i;
+                if (i === 25) {
+                    dayEl.classList.add('selected');
+                }
+                grid.appendChild(dayEl);
+            }
+        }
+
+        // 初始化時段
+        function initTimeSlots() {
+            const slots = document.getElementById('timeSlots');
+            const times = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+            times.forEach(time => {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                if (time === '15:00') {
+                    slot.classList.add('booked');
+                }
+                slot.textContent = time;
+                slots.appendChild(slot);
+            });
+        }
+
+        // 添加新消息
+        function addMessage(text, isUser = false) {
+            const messages = document.getElementById('chatMessages');
+            const message = document.createElement('div');
+            message.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            message.textContent = text;
+            messages.appendChild(message);
+            
+            // 動畫效果
+            anime({
+                targets: message,
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 500,
+                easing: 'easeOutCubic'
+            });
+
+            // 滾動到底部
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // 展示流程
+        async function startDemo() {
+            // 清空之前的消息
+            document.getElementById('chatMessages').innerHTML = '';
+            addMessage('您好！我是AI客服助理，很高興為您服務。請問您想預約什麼時段的診療呢？');
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            addMessage('我想預約10/25下午3:00的診療', true);
+            
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            addMessage('抱歉，10/25下午3:00已經有其他預約了。建議您可以考慮同一天下午2:00或4:00的時段，這兩個時段目前都還有空位。');
+            
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            addMessage('好的，那我要預約下午2:00', true);
+            
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            addMessage('已為您預約10/25下午2:00的診療時段。您的預約已登記在醫師行事曆中。請您當天準時到診，如需變更或取消，請提前告知。');
+        }
+
+        // 初始化
+        initCalendar();
+        initTimeSlots();
+    </script>
+</body>
+</html>
