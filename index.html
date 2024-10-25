@@ -156,6 +156,7 @@
         }
 
         .demo-button {
+            position: relative;
             width: 100%;
             padding: 12px;
             background: #2196f3;
@@ -168,11 +169,42 @@
             font-weight: 600;
             min-height: 44px;
             transition: transform 0.2s;
+            overflow: hidden;
+        }
+
+        .demo-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
         }
 
         .demo-button:active {
             background: #1976d2;
-            transform: scale(0.98);
+            transform: scale(0.98) translateY(0);
         }
 
         @media (min-width: 768px) {
@@ -205,6 +237,10 @@
             .demo-button {
                 transition: none;
             }
+
+            .demo-button::after {
+                animation: none;
+            }
         }
 
         @supports (backdrop-filter: blur(10px)) {
@@ -227,7 +263,7 @@
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
             <div class="time-slots" id="timeSlots"></div>
-            <button class="demo-button" onclick="startDemo()">開始展示預約流程</button>
+            <button class="demo-button" id="demoButton" onclick="startDemo()">點擊這裡開始預約流程展示</button>
         </div>
     </div>
 
@@ -235,6 +271,7 @@
         const calendarGrid = document.getElementById('calendarGrid');
         const timeSlots = document.getElementById('timeSlots');
         const chatMessages = document.getElementById('chatMessages');
+        const demoButton = document.getElementById('demoButton');
         
         // 使用 DocumentFragment 優化 DOM 操作
         function initCalendar() {
@@ -312,7 +349,18 @@
             });
         }
 
+        // 按鈕點擊動畫
+        function animateButton() {
+            anime({
+                targets: demoButton,
+                scale: [1, 0.95, 1],
+                duration: 150,
+                easing: 'easeInOutQuad'
+            });
+        }
+
         async function startDemo() {
+            animateButton();
             chatMessages.innerHTML = '';
             const messages = [
                 { text: '您好！我是AI客服助理，很高興為您服務。請問您想預約什麼時段的診療呢？', isUser: false },
